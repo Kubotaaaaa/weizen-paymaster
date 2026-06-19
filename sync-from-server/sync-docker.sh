@@ -48,10 +48,13 @@ docker run --rm -v "$WORK:/data" "$IMG" --datadir /data/node init /data/genesis.
 
 echo "🍺 [2/4] start geth node (peer → $ENODE)"
 docker rm -f "$NAME" 2>/dev/null || true
+# security: RPC bind loopback-only + read-only namespaces (admin ใช้ผ่าน IPC ไม่ใช่ HTTP)
+# --network host จำเป็นสำหรับ outbound P2P dial → server enode; RPC ปลอดภัยเพราะ 127.0.0.1 + vhosts
 docker run -d --name "$NAME" --network host -v "$WORK:/data" "$IMG" \
   --datadir /data/node --networkid 20260619 \
   --port 30355 --authrpc.port 8561 \
-  --http --http.addr 0.0.0.0 --http.port 8547 --http.api eth,net,web3,admin \
+  --http --http.addr 127.0.0.1 --http.port 8547 --http.api eth,net,web3 \
+  --http.vhosts localhost --http.corsdomain "" \
   --syncmode full --nodiscover --bootnodes "$ENODE" --verbosity 3
 
 echo "🍺 [3/4] add static peer + wait sync"
