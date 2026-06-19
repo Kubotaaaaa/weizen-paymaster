@@ -1,6 +1,8 @@
 {
   "_comment": "OP Stack L2 deploy-config — ARRA Oracle Blockchain (Weizen). l2ChainID = 20260619 (fleet genesis date). L1 = Sepolia (11155111). ที่อยู่/คีย์ด้านล่างเป็น placeholder — เปลี่ยนเป็น deployer/admin จริงก่อน deploy. ดู SYNC-OPSTACK.md",
 
+  "_security_warning": "⚠️ TESTNET LEARNING CONFIG ONLY — chain นี้เป็น devnet สำหรับเรียน ไม่ถือ bridged value. ค่าด้านล่างเลือกให้ test เร็ว ไม่ปลอดภัยสำหรับ production. ห้าม copy ไปใช้กับ chain ที่มีเงินจริง โดยไม่แก้ 4 อย่างนี้ก่อน: (1) finalizationPeriodSeconds = 604800 (7 วัน) (2) l2OutputOracleChallenger = multisig จริง (ตอนนี้เป็น 0x0 = ไม่มีใครค้าน window) (3) fundDevAccounts = false (true = prefund บัญชี known-key test mnemonic ใครก็ถอนได้) (4) useFaultProofs = true หรือมี challenger จริง. ส่วน proposer/admin/owner ที่เป็น 0x0 = placeholder ต้องใส่ address จริงก่อน deploy",
+
   "l1ChainID": 11155111,
   "l2ChainID": 20260619,
   "l1BlockTime": 12,
