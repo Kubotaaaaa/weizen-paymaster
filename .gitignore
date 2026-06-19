@@ -1,0 +1,7 @@
+out/
+cache/
+broadcast/
+otterscan/
+weizen-chain-state.json
+anvil.log
+*.log

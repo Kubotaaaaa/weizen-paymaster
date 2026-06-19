@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🍺 Weizen Paymaster — Gasless UserOperation Demo</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="hero">
+    <h1>🍺 Weizen Paymaster — Gasless UserOperation Demo</h1>
+    <p class="subtitle">Oracle School Workshop-06 · ARRA Oracle Blockchain</p>
+  </header>
+
+  <main>
+    <!-- Chain info -->
+    <section class="card chain-card">
+      <h2>⛓️ Chain Info</h2>
+      <div class="chain-grid">
+        <div class="chain-item">
+          <span class="label">Chain ID</span>
+          <span class="value mono">20260619</span>
+          <span class="hint">fleet shared genesis-date chain · 2026-06-19</span>
+        </div>
+        <div class="chain-item">
+          <span class="label">Base layer</span>
+          <span class="value">Sepolia</span>
+          <span class="hint">testnet rollup base</span>
+        </div>
+        <div class="chain-item full">
+          <span class="label">EntryPoint v0.7</span>
+          <span class="value mono break">0x0000000071727De22E5E9d8BAf0edAc6f37da032</span>
+          <span class="hint">canonical singleton ที่ทุก UserOp ผ่าน</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Flow diagram -->
+    <section class="card">
+      <h2>🔁 ERC-4337 Gasless Flow</h2>
+      <p class="muted">ทางเดินของ UserOperation จาก smart account จนถูก include บนเชน — ผู้ใช้ไม่ต้องถือ ETH เป็นค่าแก๊ส</p>
+      <div class="flow" id="flow">
+        <div class="step" data-step="0">
+          <div class="step-num">1</div>
+          <div class="step-body"><strong>User (Smart Account)</strong><span>กระเป๋าแบบ contract สร้างเจตนา ไม่ต้องเซ็นแบบ EOA</span></div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step" data-step="1">
+          <div class="step-num">2</div>
+          <div class="step-body"><strong>UserOperation</strong><span>โครงสร้าง intent (calldata + gas + paymasterData) ส่งเข้า mempool พิเศษ</span></div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step" data-step="2">
+          <div class="step-num">3</div>
+          <div class="step-body"><strong>Bundler</strong><span>รวบ UserOps หลายอัน แล้วยิงเป็น tx จริงไปที่ EntryPoint</span></div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step" data-step="3">
+          <div class="step-num">4</div>
+          <div class="step-body"><strong>EntryPoint v0.7</strong><span>สัญญากลาง verify + execute ทุก UserOp ตามมาตรฐาน</span></div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step" data-step="4">
+          <div class="step-num">5</div>
+          <div class="step-body"><strong>Paymaster · validatePaymasterUserOp</strong><span>ตกลงสปอนเซอร์ค่าแก๊สเป็น ETH แทนผู้ใช้</span></div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step" data-step="5">
+          <div class="step-num">6</div>
+          <div class="step-body"><strong>postOp</strong><span>หลัง execute — settle ค่าใช้จ่าย, optionally ดึง ERC-20 จากผู้ใช้</span></div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step" data-step="6">
+          <div class="step-num">7</div>
+          <div class="step-body"><strong>Sequencer</strong><span>จัดลำดับ + include tx ลง block บน chain 20260619</span></div>
+        </div>
+      </div>
+
+      <div class="sim-bar">
+        <button id="simBtn" class="btn">▶ Simulate gasless tx</button>
+        <span class="mock-tag">🧪 UI simulation / mock — ไม่ใช่ tx จริงบนเชน</span>
+      </div>
+      <div id="result" class="result" hidden></div>
+    </section>
+
+    <!-- Paymaster comparison tabs -->
+    <section class="card">
+      <h2>⚖️ Paymaster Types</h2>
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="verifying" role="tab">VerifyingPaymaster</button>
+        <button class="tab" data-tab="token" role="tab">TokenPaymaster</button>
+      </div>
+      <div class="tab-panel active" id="tab-verifying">
+        <ul>
+          <li>เซ็น signature <strong>off-chain</strong> เพื่ออนุมัติว่าจะสปอนเซอร์ UserOp นี้</li>
+          <li>ผู้ใช้จ่าย <strong>0 ETH</strong> — paymaster ออกค่าแก๊สให้ทั้งหมด</li>
+          <li>เหมาะกับ onboarding / gasless UX ที่ฝั่งแอปเป็นคนตัดสินใจว่าใครได้สปอนเซอร์</li>
+        </ul>
+      </div>
+      <div class="tab-panel" id="tab-token" hidden>
+        <ul>
+          <li>ผู้ใช้จ่ายค่าแก๊สเป็น <strong>ERC-20</strong> (เช่น USDC) ไม่ต้องถือ ETH</li>
+          <li>Paymaster ออก ETH ก่อน แล้ว <strong>postOp ดึง token + swap คืนเป็น ETH</strong></li>
+          <li>ต้องอ้างราคา token/ETH (oracle) เผื่อ slippage ในการตั้งราคาแก๊ส</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Why not custom gas token -->
+    <section class="card note-card">
+      <h2>💡 Why not Custom Gas Token?</h2>
+      <p>OP Stack custom gas token ถูก deprecated/ถอดออก ดังนั้น <strong>ETH ยังเป็น gas token</strong> เสมอ — interop ระหว่างเชนจึงปลอดภัย ไม่แตกเป็นหลายหน่วยค่าแก๊ส
+      Paymaster ทำ <strong>gas abstraction ที่ระดับแอป</strong> แทน จึงได้ UX จ่ายด้วย token โดยไม่แตะ gas token ของโปรโตคอล</p>
+    </section>
+  </main>
+
+  <footer>
+    <a href="https://github.com/goffeeai/weizen-paymaster" target="_blank" rel="noopener">github.com/goffeeai/weizen-paymaster</a>
+    <span class="sig">— Weizen 🍺 (AI · Rule 6 — Oracle ไม่แกล้งเป็นคน)</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
